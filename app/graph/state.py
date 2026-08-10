@@ -3,6 +3,7 @@ from app.schemas.validation import SQLValidationResult
 from app.schemas.result_analyzer import ResultAnalysis
 from app.schemas.executive_summary import ExecutiveSummary
 from app.schemas.response import AnalyticsResponse
+from app.schemas.chart_config import ChartConfig
 
 class AgentState(TypedDict):
     """
@@ -30,7 +31,7 @@ class AgentState(TypedDict):
     result_analysis: ResultAnalysis | None
 
     # Visualization
-    chart_config: dict[str, Any] | None
+    chart_config: ChartConfig | None
 
     # Summary / Output
     executive_summary: ExecutiveSummary | None
@@ -47,4 +48,4 @@ class AgentState(TypedDict):
     # Debugging
     correction_history: list[str]
 
-    final_response: AnalyticsResponse
+    final_response: AnalyticsResponse | None

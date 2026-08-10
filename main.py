@@ -1,10 +1,16 @@
-from app.graph.graph import graph
+from fastapi import FastAPI
 
-initial_state = {
-    "question": "Show most selling product.",
-    "retry_count": 0
-}
+from app.api.routes.analytics import router as analytics_router
 
-result = graph.invoke(initial_state)
+app = FastAPI(
+    title="Self-Correcting Natural Language SQL Analytics API",
+    version="1.0.0"
+)
 
-print(result)
+app.include_router(analytics_router, prefix="")
+
+@app.get("/health")
+def health_check():
+    return {
+        "Status": "Healthy"
+    }
