@@ -4,6 +4,9 @@ from sqlalchemy import text
 
 from app.database.session import SessionLocal
 from app.embeddings import embeddings
+from app.config.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def get_database_schema() -> dict[str, list[dict]]:
@@ -376,9 +379,21 @@ def inspect_schema(question: str) -> dict:
     Retrieve and format the relevant database schema.
     """
 
+    logger.info("Retrieving database schema")
+
     schema = get_database_schema()
 
+    logger.info(
+        "Database schema retrieved. Tables found: %d",
+        len(schema)
+    )
+
     relationships = get_table_relationships()
+
+    logger.info(
+        "Database relationships retrieved. Relationships found: %d",
+        len(relationships)
+    )
 
     # Step 1: Hybrid retrieval
     candidate_tables = hybrid_table_search(
@@ -386,10 +401,21 @@ def inspect_schema(question: str) -> dict:
         schema=schema,
     )
 
+    logger.info(
+        "Hybrid schema search returned candidate tables: %s",
+        candidate_tables
+    )
+
+
     # Step 2: Relationship expansion
     relevant_tables = expand_related_tables(
         relevant_tables=candidate_tables,
         relationships=relationships,
+    )
+
+    logger.info(
+        "Relevant tables after relationship expansion: %s",
+        relevant_tables
     )
 
     # Step 3: Build schema context
@@ -397,6 +423,8 @@ def inspect_schema(question: str) -> dict:
         relevant_tables=relevant_tables,
         schema=schema,
     )
+
+    logger.info("Schema context successfully generated")
 
     return {
         "database_schema": schema,

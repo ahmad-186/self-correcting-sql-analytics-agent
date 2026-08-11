@@ -21,7 +21,7 @@ router = APIRouter(
 )
 def analytics_query(request: AnalyticsRequest):
 
-    logger.info("Analytics Request received: %", request.question)
+    logger.info("Analytics Request received: %s", request.question)
 
     initial_state = {
         "question": request.question,

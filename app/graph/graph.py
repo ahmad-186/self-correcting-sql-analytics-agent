@@ -13,6 +13,10 @@ from app.graph.nodes.response_formatter import response_formatter_node
 
 from app.graph.routers.sql_validator_router import route_after_validation
 
+from app.config.logging import get_logger
+
+logger = get_logger(__name__)
+
 # Define Graph
 builder = StateGraph(AgentState)
 
@@ -59,3 +63,5 @@ builder.add_edge("response_formatter", END)
 
 # Compile
 graph = builder.compile()
+
+logger.info("Analytics LangGraph compiled successfully")

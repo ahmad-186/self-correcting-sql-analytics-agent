@@ -3,7 +3,9 @@ from sqlalchemy import text
 from sqlglot import expressions as exp
 from app.database.session import SessionLocal
 from app.schemas.validation import SQLValidationResult, ValidationCheck
+from app.config.logging import get_logger
 
+logger = get_logger(__name__)
 
 def validate_syntax(generated_sql: str) -> exp.Expression:
     """
@@ -94,6 +96,8 @@ def validate_sql(generated_sql: str, schema: dict[str, list[str]]) -> SQLValidat
     Validate the sql before execution.
     """
 
+    logger.info("SQL validation tool started")
+
     # if not generated_sql:
     #     return SQLValidationResult(
     #         is_valid=False,
@@ -104,6 +108,8 @@ def validate_sql(generated_sql: str, schema: dict[str, list[str]]) -> SQLValidat
     try:
         expression = validate_syntax(generated_sql)
     except sqlglot.errors.ParseError as e:
+        logger.warning("SQL syntax validation failed")
+
         return SQLValidationResult(
             is_valid=False,
             failed_Check=ValidationCheck.SYNTAX,
@@ -112,15 +118,20 @@ def validate_sql(generated_sql: str, schema: dict[str, list[str]]) -> SQLValidat
 
     result = validate_read_only(expression)
     if not result.is_valid:
+        logger.warning("SQL read-only validation failed")
         return result
 
     result = validate_schema(expression, schema)
     if not result.is_valid:
+        logger.warning("SQL schema validation failed")
         return result
     
     result = validate_execution(generated_sql)
     if not result.is_valid:
+        logger.warning("SQL execution validation failed")
         return result
+
+    logger.info("All SQL validation checks passed")
 
     return SQLValidationResult(
         is_valid=True

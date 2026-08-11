@@ -2,13 +2,20 @@ from app.schemas.result_analyzer import ResultAnalysis
 from typing import Any
 from datetime import date, datetime
 from decimal import Decimal
+from app.config.logging import get_logger
+
+logger = get_logger(__name__)
 
 def analyze_result(query_result: list[dict[str, Any]]) -> ResultAnalysis:
     """
     Analyze SQL query results and generate metadata for downstream nodes.
     """
 
+    logger.info("Analyzing query result")
+
     if not query_result:
+
+        logger.info("Query result is empty")
 
         return ResultAnalysis(
             row_count=0,
@@ -54,6 +61,14 @@ def analyze_result(query_result: list[dict[str, Any]]) -> ResultAnalysis:
             datetime_columns.append(column)
         else:
             categorical_columns.append(column)
+
+    logger.debug(
+        "Detected columns | numeric=%s | categorical=%s | datetime=%s",
+        numeric_columns,
+        categorical_columns,
+        datetime_columns,
+    )
+
 
     return ResultAnalysis(
         row_count=row_count,
