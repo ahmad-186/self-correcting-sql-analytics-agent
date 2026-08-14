@@ -13,11 +13,18 @@ router = APIRouter(
 )
 
 @router.post(
-        "/query",
-        responses={
-            400: {"model": ErrorResponse},
-            500: {"model": ErrorResponse}
-        }
+    "/query",
+    summary="Execute a natural-language analytics query",
+    description="""
+    Accepts a business question in natural language, generates and
+    validates SQL, executes the query, analyzes the result, recommends
+    a visualization, and returns an executive summary.
+    """,
+    responses={
+        400: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
 )
 def analytics_query(request: AnalyticsRequest):
 
