@@ -1,4 +1,4 @@
-from app.schemas.result_analyzer import ResultAnalysis
+from app.schemas.result_analyzer import ResultAnalysis, NumericSummary
 from typing import Any
 from datetime import date, datetime
 from decimal import Decimal
@@ -23,7 +23,8 @@ def analyze_result(query_result: list[dict[str, Any]]) -> ResultAnalysis:
             numeric_columns=[],
             categorical_columns=[],
             datetime_columns=[],
-            is_empty=True
+            is_empty=True,
+            numeric_summary={}
         )
 
     row_count = len(query_result)
@@ -69,6 +70,64 @@ def analyze_result(query_result: list[dict[str, Any]]) -> ResultAnalysis:
         datetime_columns,
     )
 
+    numeric_summary = {}
+
+    for column in numeric_columns:
+        values = [
+            row[column]
+            for row in query_result
+            if row[column] is not None
+        ]
+
+        if values:
+            numeric_summary[column] = NumericSummary(
+                min=float(min(values)),
+                max=float(max(values)),
+                average=float(sum(values) / len(values)),
+                total=float(sum(values))
+            )
+    highest_value = None
+    lowest_value = None
+
+    for column in numeric_columns:
+        values = [
+            row[column]
+            for row in query_result
+            if row[column] is not None
+        ]
+
+        if not values:
+            continue
+
+        max_row = max(
+            query_result,
+            key=lambda row: (
+                row[column]
+                if row[column] is not None
+                else float("-inf")
+            )
+        )
+
+        min_row = min(
+            query_result,
+            key=lambda row: (
+                row[column]
+                if row[column] is not None
+                else float("inf")
+            )
+        )
+
+        highest_value = {
+            "column": column,
+            "value": float(max_row[column]),
+            "row": max_row,
+        }
+
+        lowest_value = {
+            "column": column,
+            "value": float(min_row[column]),
+            "row": min_row,
+        }
 
     return ResultAnalysis(
         row_count=row_count,
@@ -76,5 +135,8 @@ def analyze_result(query_result: list[dict[str, Any]]) -> ResultAnalysis:
         numeric_columns=numeric_columns,
         categorical_columns=categorical_columns,
         datetime_columns=datetime_columns,
-        is_empty=False
+        is_empty=False,
+        numeric_summary=numeric_summary,
+        highest_value=highest_value,
+        lowest_value=lowest_value,
     )

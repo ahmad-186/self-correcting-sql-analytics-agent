@@ -1,7 +1,11 @@
 from app.schemas.result_analyzer import ResultAnalysis
 
-def build_executive_summary_prompt(question: str, analysis: ResultAnalysis, query_result: list[dict]) -> str:
 
+def build_executive_summary_prompt(
+    question: str,
+    analysis: ResultAnalysis,
+    query_result: list[dict]
+) -> str:
     """
     Build the prompt for the Executive Summary LLM.
     """
@@ -23,23 +27,47 @@ Result Analysis:
 - Datetime Columns: {analysis.datetime_columns}
 - Is Empty: {analysis.is_empty}
 
+Deterministic Numeric Statistics:
+{analysis.numeric_summary}
+
+Highest Value:
+{analysis.highest_value}
+
+Lowest Value:
+{analysis.lowest_value}
+
+These numeric statistics were calculated programmatically from the
+query result. Treat them as authoritative. Do NOT recalculate or
+contradict them.
+
+When stating the highest or lowest result, use the provided
+Highest Value and Lowest Value fields exactly.
+
+Never infer or calculate a different highest or lowest value
+from the query result.
+
 Query Result:
 {query_result}
 
 Rules:
 
-1. Answer based ONLY on the provided query result.
-2. Do not invent facts, numbers, trends, or explanations.
-3. Directly address the user's question.
-4. Keep the summary concise and business-oriented.
-5. Mention important numerical findings when relevant.
-6. Mention notable patterns or comparisons when they are clearly
-   supported by the data.
-7. If the result is empty, clearly state that no matching data was found.
-8. Do not discuss SQL or implementation details.
-9. Return a structured response only.
+1. Answer based ONLY on the provided data.
+2. Treat Deterministic Numeric Statistics as authoritative.
+3. Never invent facts, numbers, trends, rankings, or explanations.
+4. Directly address the user's question.
+5. Keep the summary concise and business-oriented.
+6. Mention important numerical findings when relevant.
+7. When comparing numerical values, ensure the comparison is
+   mathematically consistent with the provided statistics.
+8. Never claim that a value is the highest when another provided value
+   is larger.
+9. Mention notable patterns or comparisons only when clearly supported.
+10. If the result is empty, clearly state that no matching data was found.
+11. Do not discuss SQL, databases, prompts, models, or implementation.
+12. Return a structured response only.
 
 The response must contain:
+
 - summary: A concise overall explanation of the result.
 - key_insights: A list of the most important findings.
 """
