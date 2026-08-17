@@ -24,7 +24,9 @@ def analyze_result(query_result: list[dict[str, Any]]) -> ResultAnalysis:
             categorical_columns=[],
             datetime_columns=[],
             is_empty=True,
-            numeric_summary={}
+            numeric_summary={},
+            highest_value=None,
+            lowest_value=None
         )
 
     row_count = len(query_result)

@@ -66,6 +66,14 @@ Rules:
 8. Never invent columns.
 
 9. Return a structured response only.
+
+IMPORTANT:
+The chart_type value MUST be exactly one of:
+"bar", "line", "pie", "scatter", "table", "none"
+
+Use lowercase values exactly as written.
+Do NOT return enum names such as BAR, LINE, TABLE, or NONE.
+
 """
 
     return prompt.strip()

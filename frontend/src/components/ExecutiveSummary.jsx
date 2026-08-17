@@ -16,57 +16,41 @@ function ExecutiveSummary({ summary }) {
 
   return (
     <section className="summary-grid">
-
       <div className="summary-card">
         <div className="card-header">
           <div>
-            <span className="card-label">
-              EXECUTIVE SUMMARY
-            </span>
-
+            <span className="card-label">Executive Summary</span>
             <h3>What the data says</h3>
           </div>
 
-          <div className="card-icon">
-            AI
-          </div>
+          <div className="card-icon">AI</div>
         </div>
 
-        <p className="summary-text">
-          {summaryText}
-        </p>
+        <div className="summary-badge">AI generated</div>
+        <p className="summary-text">{summaryText}</p>
       </div>
 
       {insights.length > 0 && (
         <div className="summary-card">
           <div className="card-header">
             <div>
-              <span className="card-label">
-                KEY INSIGHTS
-              </span>
-
+              <span className="card-label">Key Insights</span>
               <h3>Important findings</h3>
             </div>
 
-            <div className="card-icon">
-              ↗
-            </div>
+            <div className="card-icon">✓</div>
           </div>
 
           <ul className="insights">
             {insights.map((insight, index) => (
               <li key={index}>
-                <span className="insight-number">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-
+                <span className="insight-icon">✓</span>
                 <span>{insight}</span>
               </li>
             ))}
           </ul>
         </div>
       )}
-
     </section>
   )
 }

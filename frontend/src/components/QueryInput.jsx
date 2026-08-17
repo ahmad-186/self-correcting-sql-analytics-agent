@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-function QueryInput({ onSubmit, loading }) {
+function QueryInput({ onSubmit, loading, suggestions = [] }) {
   const [question, setQuestion] = useState("")
 
   const handleSubmit = (event) => {
@@ -14,32 +14,37 @@ function QueryInput({ onSubmit, loading }) {
   }
 
   return (
-    <form
-      className="query-form"
-      onSubmit={handleSubmit}
-    >
+    <form className="query-form" onSubmit={handleSubmit}>
       <div className="query-input-wrapper">
-        <div className="search-icon">
-          ⌕
-        </div>
-
-        <input
-          type="text"
+        <textarea
           value={question}
-          onChange={(event) =>
-            setQuestion(event.target.value)
-          }
-          placeholder="Ask something about your business data..."
+          onChange={(event) => setQuestion(event.target.value)}
+          placeholder="e.g. Show total sales by product"
           disabled={loading}
+          rows={4}
+          aria-label="Ask your data"
         />
 
-        <button
-          type="submit"
-          disabled={!question.trim() || loading}
-        >
-          {loading ? "Analyzing..." : "Analyze"}
+        <button type="submit" disabled={!question.trim() || loading}>
+          {loading ? "Analyzing your data..." : "Analyze"}
         </button>
       </div>
+
+      {suggestions.length > 0 && (
+        <div className="suggestion-list" aria-label="Suggested questions">
+          {suggestions.map((suggestion) => (
+            <button
+              key={suggestion}
+              type="button"
+              className="suggestion-pill"
+              onClick={() => !loading && setQuestion(suggestion)}
+              disabled={loading}
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      )}
     </form>
   )
 }
