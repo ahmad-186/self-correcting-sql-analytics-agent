@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import QueryInput from "./components/QueryInput"
 import ExecutiveSummary from "./components/ExecutiveSummary"
 import AnalyticsChart from "./components/AnalyticsChart"
@@ -6,6 +6,7 @@ import ResultTable from "./components/ResultTable"
 import "./App.css"
 
 const API_URL = "http://localhost:8000/analytics/query"
+const HEALTH_URL = "http://localhost:8000/health"
 
 const suggestedQuestions = [
   "Show total sales by product",
@@ -84,6 +85,19 @@ function App() {
 
   const metricCards = useMemo(() => getMetricCards(result), [result])
 
+  // Check backend health on mount
+  useEffect(() => {
+    const checkBackendHealth = async () => {
+      try {
+        const response = await fetch(HEALTH_URL, { method: "GET" })
+        setBackendOnline(response.ok)
+      } catch (err) {
+        setBackendOnline(false)
+      }
+    }
+    checkBackendHealth()
+  }, [])
+
   const sectionMeta = {
     Overview: {
       eyebrow: "Overview",
@@ -112,20 +126,9 @@ function App() {
     },
   }
 
-  const overviewStats = [
-    { label: "Monthly revenue", value: "$82.4K", delta: "+12.6%" },
-    { label: "Orders", value: "2,184", delta: "+8.1%" },
-    { label: "Avg. order value", value: "$378", delta: "+3.2%" },
-    { label: "Conversion rate", value: "4.9%", delta: "+0.7%" },
-  ]
+  const [backendOnline, setBackendOnline] = useState(true)
 
-  const queryList = queryHistory.length
-    ? queryHistory
-    : [
-        "Show total sales by product",
-        "Which customers have placed the most orders?",
-        "Compare sales across cities",
-      ]
+  const queryList = queryHistory
 
   const savedInsightCards = result?.summary?.key_insights?.length
     ? result.summary.key_insights.map((insight, index) => ({
@@ -133,28 +136,11 @@ function App() {
         body: insight,
         category: index % 2 === 0 ? "Revenue" : "Behavior",
       }))
-    : [
-        {
-          title: "Top revenue driver",
-          body: "Product A accounted for 38% of revenue and remains the strongest growth contributor.",
-          category: "Revenue",
-        },
-        {
-          title: "Customer retention",
-          body: "Repeat buyers are purchasing 24% more often than new customers after the last campaign.",
-          category: "Behavior",
-        },
-        {
-          title: "Regional opportunity",
-          body: "The West region is trending 11% above the national average for conversion efficiency.",
-          category: "Market",
-        },
-      ]
+    : []
 
   const settingsCards = [
-    { title: "Data source", detail: "PostgreSQL • Production", status: "Connected" },
-    { title: "AI model", detail: "GPT-4.1 mini • Reasoning enabled", status: "Optimized" },
-    { title: "Dashboard defaults", detail: "Light theme • 4 KPI cards • Auto refresh", status: "Active" },
+    { title: "Analytics Engine", detail: "Natural Language SQL Agent", status: "Active" },
+    { title: "Database Connection", detail: "Configured via environment variables", status: "Connected" },
   ]
 
   const analyzeQuestion = async (question) => {
@@ -205,117 +191,18 @@ function App() {
   const renderContent = () => {
     if (activeSection === "Overview") {
       return (
-        <section className="results-panel overview-panel">
-          <div className="overview-hero">
-            <div className="overview-copy">
+        <section className="results-panel">
+          <div className="results-header">
+            <div>
               <span className="panel-label">Overview</span>
-              <h2>Business health at a glance</h2>
-              <p>
-                Monitor growth, conversion quality, and customer momentum across the business in one dashboard.
-              </p>
-            </div>
-
-            <div className="overview-actions">
-              <button type="button" className="primary-button">Generate report</button>
-              <button type="button" className="secondary-button">Export</button>
+              <h2>Dashboard Overview</h2>
             </div>
           </div>
 
-          <div className="overview-stat-grid">
-            {overviewStats.map((stat) => (
-              <div key={stat.label} className="overview-stat-card">
-                <div className="overview-stat-label">{stat.label}</div>
-                <div className="overview-stat-row">
-                  <div className="overview-stat-value">{stat.value}</div>
-                  <span className="overview-stat-delta">{stat.delta}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="section-grid two-col">
-            <div className="info-card overview-visual-card">
-              <div className="card-header">
-                <h3>Revenue trend</h3>
-                <span className="card-icon">↗</span>
-              </div>
-
-              <div className="chart-summary-row">
-                <div>
-                  <div className="summary-figure">$236.8K</div>
-                  <div className="summary-caption">This quarter</div>
-                </div>
-                <span className="summary-badge positive">+18.4%</span>
-              </div>
-
-              <div className="sparkline" aria-label="Revenue trend chart">
-                <span className="spark spark-1" />
-                <span className="spark spark-2" />
-                <span className="spark spark-3" />
-                <span className="spark spark-4" />
-                <span className="spark spark-5" />
-                <span className="spark spark-6" />
-              </div>
-            </div>
-
-            <div className="info-card">
-              <div className="card-header">
-                <h3>Key focus areas</h3>
-                <span className="card-icon">◎</span>
-              </div>
-
-              <div className="focus-list">
-                <div className="focus-row">
-                  <span>Enterprise sales</span>
-                  <strong>78%</strong>
-                </div>
-                <div className="progress"><span style={{ width: "78%" }} /></div>
-
-                <div className="focus-row">
-                  <span>Retention</span>
-                  <strong>64%</strong>
-                </div>
-                <div className="progress"><span style={{ width: "64%" }} /></div>
-
-                <div className="focus-row">
-                  <span>Pipeline coverage</span>
-                  <strong>91%</strong>
-                </div>
-                <div className="progress"><span style={{ width: "91%" }} /></div>
-              </div>
-            </div>
-          </div>
-
-          <div className="section-grid three-col">
-            <div className="info-card compact-card">
-              <div className="card-header">
-                <h3>Top channel</h3>
-                <span className="card-icon small-icon">◌</span>
-              </div>
-              <div className="mini-stat">Organic search</div>
-              <div className="mini-value">$61.4K</div>
-              <div className="mini-caption">+14.3% month over month</div>
-            </div>
-
-            <div className="info-card compact-card">
-              <div className="card-header">
-                <h3>Goal progress</h3>
-                <span className="card-icon small-icon">◔</span>
-              </div>
-              <div className="mini-stat">Q3 target</div>
-              <div className="mini-value">82%</div>
-              <div className="mini-caption">On track to hit goal</div>
-            </div>
-
-            <div className="info-card compact-card">
-              <div className="card-header">
-                <h3>Customer health</h3>
-                <span className="card-icon small-icon">◍</span>
-              </div>
-              <div className="mini-stat">NPS</div>
-              <div className="mini-value">+52</div>
-              <div className="mini-caption">Strong satisfaction score</div>
-            </div>
+          <div className="empty-state-panel">
+            <div className="empty-illustration">📊</div>
+            <h3>No data available yet</h3>
+            <p>Run an analysis in the Analytics section to see your data here.</p>
           </div>
         </section>
       )
@@ -329,28 +216,37 @@ function App() {
               <span className="panel-label">Query History</span>
               <h2>Recent queries</h2>
             </div>
-            <div className="result-meta">
-              <span>{queryList.length} saved queries</span>
-            </div>
+            {queryList.length > 0 && (
+              <div className="result-meta">
+                <span>{queryList.length} saved queries</span>
+              </div>
+            )}
           </div>
 
-          <div className="history-list">
-            {queryList.map((entry, index) => (
-              <button
-                key={`${entry}-${index}`}
-                type="button"
-                className="history-item"
-                onClick={() => analyzeQuestion(entry)}
-              >
-                <span className="history-order">#{index + 1}</span>
-                <div className="history-text">
-                  <strong>{entry}</strong>
-                  <span>{index === 0 ? "Completed today" : index === 1 ? "Completed yesterday" : "Completed last week"}</span>
-                </div>
-                <span className="history-status success">Done</span>
-              </button>
-            ))}
-          </div>
+          {queryList.length > 0 ? (
+            <div className="history-list">
+              {queryList.map((entry, index) => (
+                <button
+                  key={`${entry}-${index}`}
+                  type="button"
+                  className="history-item"
+                  onClick={() => analyzeQuestion(entry)}
+                >
+                  <span className="history-order">#{index + 1}</span>
+                  <div className="history-text">
+                    <strong>{entry}</strong>
+                  </div>
+                  <span className="history-status success">Done</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state-panel">
+              <div className="empty-illustration">📝</div>
+              <h3>No analyses yet</h3>
+              <p>Your completed analyses will appear here.</p>
+            </div>
+          )}
         </section>
       )
     }
@@ -363,22 +259,32 @@ function App() {
               <span className="panel-label">Saved Insights</span>
               <h2>Key findings</h2>
             </div>
-            <div className="result-meta">
-              <span>{savedInsightCards.length} insights</span>
-            </div>
+            {savedInsightCards.length > 0 && (
+              <div className="result-meta">
+                <span>{savedInsightCards.length} insights</span>
+              </div>
+            )}
           </div>
 
-          <div className="insight-grid">
-            {savedInsightCards.map((insight) => (
-              <article key={insight.title} className="info-card insight-card">
-                <div className="card-header">
-                  <h3>{insight.title}</h3>
-                  <span className="insight-tag">{insight.category}</span>
-                </div>
-                <p>{insight.body}</p>
-              </article>
-            ))}
-          </div>
+          {savedInsightCards.length > 0 ? (
+            <div className="insight-grid">
+              {savedInsightCards.map((insight) => (
+                <article key={insight.title} className="info-card insight-card">
+                  <div className="card-header">
+                    <h3>{insight.title}</h3>
+                    <span className="insight-tag">{insight.category}</span>
+                  </div>
+                  <p>{insight.body}</p>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state-panel">
+              <div className="empty-illustration">💡</div>
+              <h3>No saved insights yet</h3>
+              <p>Save important findings from your analyses to access them here.</p>
+            </div>
+          )}
         </section>
       )
     }
@@ -407,10 +313,10 @@ function App() {
 
           <div className="info-card toggle-card">
             <div className="card-header">
-              <h3>Notifications</h3>
-              <span className="toggle-badge on">On</span>
+              <h3>About this Application</h3>
             </div>
-            <p>Receive summary emails when a report is generated or a threshold is crossed.</p>
+            <p><strong>InsightAI</strong> is a natural language analytics agent that transforms business questions into SQL queries, executes them against your database, and generates insights with visualizations.</p>
+            <p style={{ marginTop: "12px", fontSize: "0.85rem", color: "var(--text-soft)" }}>For configuration details or support, please check the application documentation.</p>
           </div>
         </section>
       )
@@ -455,7 +361,7 @@ function App() {
             <div className="error-copy">
               <h3>Unable to analyze this question</h3>
               <p>Please check your question and try again.</p>
-              <button type="button" className="primary-button" onClick={() => analyzeQuestion(result?.question || "Show total sales by product") }>
+              <button type="button" className="primary-button" onClick={() => result && analyzeQuestion(result.question)}>
                 Try again
               </button>
             </div>
@@ -580,8 +486,8 @@ function App() {
 
           <div className="header-actions">
             <div className="api-status">
-              <span className="status-dot" />
-              Backend online
+              <span className="status-dot" style={{ backgroundColor: backendOnline ? "#10B981" : "#EF4444" }} />
+              {backendOnline ? "Backend online" : "Backend offline"}
             </div>
             <button type="button" className="icon-button" aria-label="Open settings">⚙</button>
           </div>
