@@ -5,8 +5,8 @@ import AnalyticsChart from "./components/AnalyticsChart"
 import ResultTable from "./components/ResultTable"
 import "./App.css"
 
-const API_URL = "http://localhost:8000/analytics/query"
-const HEALTH_URL = "http://localhost:8000/health"
+const API_URL = "/analytics/query"
+const HEALTH_URL = "/health"
 
 const suggestedQuestions = [
   "Show total sales by product",
