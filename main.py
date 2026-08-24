@@ -28,6 +28,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
+        "https://sql-analytics-agent-frontend.onrender.com"
     ],
     allow_credentials=True,
     allow_methods=["*"],
