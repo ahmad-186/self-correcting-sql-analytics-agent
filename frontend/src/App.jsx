@@ -5,8 +5,11 @@ import AnalyticsChart from "./components/AnalyticsChart"
 import ResultTable from "./components/ResultTable"
 import "./App.css"
 
-const API_URL = "/analytics/query"
-const HEALTH_URL = "/health"
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:8000"
+
+const API_URL = `${API_BASE_URL}/analytics/query`
+const HEALTH_URL = `${API_BASE_URL}/health`
 
 const suggestedQuestions = [
   "Show total sales by product",
