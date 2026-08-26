@@ -1,145 +1,274 @@
-# InsightAI --- Self-Correcting Natural Language SQL & Analytics Agent
+# InsightAI — Self-Correcting Natural Language SQL & Analytics Agent
 
-InsightAI is an AI-powered business analytics application that lets
-users ask questions about business data in natural language and receive
-structured, business-oriented answers.
+InsightAI is a full-stack AI analytics application that allows users to ask questions about business data using natural language and receive structured, business-oriented insights without writing SQL manually.
 
-The system combines a React analytics dashboard, FastAPI backend,
-LangGraph-based analytics workflow, PostgreSQL, SQL validation, result
-analysis, visualization recommendation, and LLM-generated executive
-insights.
+The system combines a **React analytics dashboard**, **FastAPI REST API**, **LangGraph-based agentic workflow**, **PostgreSQL**, **LLM-generated SQL**, **SQL validation**, **self-correction**, **result analysis**, and **automatic visualization recommendations**.
 
-> **Project status:** Core backend, analytics workflow, API
-> documentation, automated tests, and React dashboard are implemented.
-> Dockerization and deployment are the next milestone.
+The project was built with a focus on making LLM-generated SQL safer, more reliable, and more useful for real business analytics.
 
-## Features
+---
 
-### Natural-Language Analytics
+## Demo
 
-Ask questions such as:
+**Frontend:** `<DEPLOYED_FRONTEND_URL>`
 
--   Show total sales by product
--   Show all customers
--   Which products generate the most revenue?
--   Compare sales across cities
+**Backend API:** `<DEPLOYED_BACKEND_URL>`
 
-Users do not need to write SQL manually.
+**API Documentation:** `<DEPLOYED_BACKEND_URL>/docs`
 
-### Self-Correcting SQL Analytics Workflow
+---
 
-The agent workflow:
+## Core Idea
 
-1.  Understands the user's question.
-2.  Inspects the database schema.
-3.  Generates SQL.
-4.  Validates generated SQL.
-5.  Detects validation/execution problems.
-6.  Attempts self-correction.
-7.  Executes the validated query.
-8.  Analyzes the returned dataset.
-9.  Recommends an appropriate visualization.
-10. Generates an executive summary and key insights.
+Traditional natural-language-to-SQL systems often follow a simple pattern:
 
-### Result Analysis
-
-Returned data is analyzed for:
-
--   Row count
--   Column names
--   Numeric columns
--   Categorical columns
--   Datetime columns
--   Empty-result state
-
-### Executive Insights
-
-The system generates business-oriented:
-
--   Executive summaries
--   Key insights
--   Important numerical findings
--   Supported comparisons and patterns
-
-### Visualization Recommendation
-
-The system can recommend and render:
-
--   Bar charts
--   Line charts
--   Pie/donut-style visualizations
--   Tables
-
-### React Analytics Dashboard
-
-The dashboard provides:
-
--   Natural-language query input
--   Suggested questions
--   Loading/analysis state
--   KPI cards
--   Executive summary
--   Key insights
--   Interactive visualizations
--   Query result tables
--   Query history UI
--   Saved insights UI
--   Settings UI
--   Backend status indicator
-
-Some non-core dashboard sections are currently UI-level features and are
-not yet backed by persistent storage.
-
-## Architecture
-
-``` text
-                         ┌──────────────────────┐
-                         │    React Frontend    │
-                         │   Analytics Dashboard│
-                         └──────────┬───────────┘
-                                    │
-                                  HTTP
-                                    │
-                         ┌──────────▼───────────┐
-                         │       FastAPI        │
-                         │       REST API       │
-                         └──────────┬───────────┘
-                                    │
-                         ┌──────────▼───────────┐
-                         │      LangGraph       │
-                         │  Analytics Workflow  │
-                         └──────────┬───────────┘
-                                    │
-             ┌──────────────────────┼──────────────────────┐
-             │                      │                      │
-             ▼                      ▼                      ▼
-      Schema Inspection       SQL Generation        Validation /
-                                                     Self-Correction
-             │                      │                      │
-             └──────────────────────┼──────────────────────┘
-                                    │
-                         ┌──────────▼───────────┐
-                         │      PostgreSQL      │
-                         │    Business Data     │
-                         └──────────┬───────────┘
-                                    │
-                         ┌──────────▼───────────┐
-                         │    Result Analysis   │
-                         └──────────┬───────────┘
-                                    │
-                    ┌───────────────┴────────────────┐
-                    ▼                                ▼
-             Visualization                  Executive Summary
-              Recommendation                 + Key Insights
-                    │                                │
-                    └───────────────┬────────────────┘
-                                    ▼
-                            React Dashboard
+```text
+User Question
+      ↓
+LLM
+      ↓
+SQL
+      ↓
+Database
 ```
 
-## Analytics Workflow
+That approach becomes unreliable when the generated SQL contains:
 
-``` text
+* Syntax errors
+* Incorrect table names
+* Incorrect column names
+* Invalid joins
+* Unsupported operations
+* Schema misunderstandings
+* Empty or unexpected results
+
+InsightAI introduces validation and self-correction around the LLM:
+
+```text
+User Question
+      ↓
+Schema Inspection
+      ↓
+SQL Generation
+      ↓
+SQL Validation
+      ↓
+   ┌─────────────── Invalid ───────────────┐
+   ↓                                       │
+Self-Correction ───────────────────────────┘
+      ↓
+SQL Execution
+      ↓
+Result Analysis
+      ↓
+Visualization Recommendation
+      ↓
+Executive Summary + Key Insights
+      ↓
+React Analytics Dashboard
+```
+
+---
+
+# Features
+
+## Natural-Language Analytics
+
+Users can ask questions such as:
+
+```text
+Show total sales by product
+```
+
+```text
+Which products generate the most revenue?
+```
+
+```text
+Show monthly sales trends
+```
+
+```text
+Which customers have placed the most orders?
+```
+
+```text
+Compare sales across cities
+```
+
+The user does not need to know SQL.
+
+---
+
+## Schema-Aware SQL Generation
+
+Before generating SQL, the system inspects the connected database schema.
+
+The schema inspection layer provides the SQL generation process with relevant information about:
+
+* Tables
+* Columns
+* Relationships
+* Relevant database objects
+* Schema context required for the current question
+
+The system also includes schema-aware/hybrid retrieval to reduce unnecessary schema context.
+
+---
+
+## SQL Validation
+
+Because SQL is generated by an LLM, generated queries are not trusted blindly.
+
+The validation layer checks generated SQL before execution.
+
+Validation includes:
+
+* SQL syntax validation
+* Read-operation restrictions
+* Referenced table validation
+* Referenced database object validation
+* Detection of invalid generated SQL
+
+`SQLGlot` is used for SQL parsing and validation.
+
+---
+
+## Self-Correcting SQL
+
+When generated SQL fails validation or execution, the system can feed the failure information back into the workflow.
+
+The correction process is designed around the reason for failure rather than simply retrying the same query.
+
+Conceptually:
+
+```text
+Generated SQL
+     ↓
+Validation
+     ↓
+Invalid
+     ↓
+Error + Reason
+     ↓
+LLM Correction
+     ↓
+Validation Again
+     ↓
+Valid → Execute
+```
+
+This makes the system more robust than a simple one-shot text-to-SQL implementation.
+
+---
+
+## Result Analysis
+
+After successful execution, the returned dataset is analyzed for:
+
+* Row count
+* Column names
+* Numeric columns
+* Categorical columns
+* Datetime columns
+* Empty-result states
+* Relevant numerical patterns
+
+This metadata is then used by the downstream analytics and visualization stages.
+
+---
+
+## Executive Insights
+
+The system converts raw query results into business-oriented information such as:
+
+* Executive summaries
+* Key insights
+* Important numerical findings
+* Comparisons
+* Patterns and trends
+* Highest/lowest performing entities
+
+The goal is not only to return SQL results, but to make those results understandable to a business user.
+
+---
+
+## Automatic Visualization Recommendation
+
+Based on the structure of the returned dataset, the system can recommend appropriate visualizations such as:
+
+* Bar charts
+* Line charts
+* Pie/donut charts
+* Result tables
+
+The React dashboard then renders the resulting analytics interactively.
+
+---
+
+# Architecture
+
+```text
+                         ┌──────────────────────────┐
+                         │      React Frontend      │
+                         │    Analytics Dashboard   │
+                         └────────────┬─────────────┘
+                                      │
+                                      │ HTTP
+                                      ▼
+                         ┌──────────────────────────┐
+                         │       FastAPI API        │
+                         └────────────┬─────────────┘
+                                      │
+                                      ▼
+                         ┌──────────────────────────┐
+                         │        LangGraph         │
+                         │    Analytics Workflow    │
+                         └────────────┬─────────────┘
+                                      │
+             ┌────────────────────────┼────────────────────────┐
+             │                        │                        │
+             ▼                        ▼                        ▼
+      Schema Inspector         SQL Generator            SQL Validator
+             │                        │                        │
+             │                        │                 ┌──────┴──────┐
+             │                        │                 │             │
+             │                        │              Valid          Invalid
+             │                        │                 │             │
+             │                        │                 │      Self-Correction
+             │                        │                 │             │
+             └────────────────────────┼─────────────────┴─────────────┘
+                                      │
+                                      ▼
+                         ┌──────────────────────────┐
+                         │       PostgreSQL         │
+                         │      Business Data       │
+                         └────────────┬─────────────┘
+                                      │
+                                      ▼
+                         ┌──────────────────────────┐
+                         │     Result Analysis      │
+                         └────────────┬─────────────┘
+                                      │
+                         ┌────────────┴────────────┐
+                         ▼                         ▼
+                Visualization              Executive Summary
+                Recommendation             + Key Insights
+                         │                         │
+                         └────────────┬────────────┘
+                                      ▼
+                         ┌──────────────────────────┐
+                         │      React Dashboard     │
+                         └──────────────────────────┘
+```
+
+---
+
+# LangGraph Workflow
+
+The core analytics workflow is implemented as a graph rather than a simple sequential LLM chain.
+
+```text
 User Question
      │
      ▼
@@ -149,9 +278,11 @@ Schema Inspector
 SQL Generator
      │
      ▼
-Validation
+SQL Validator
      │
-     ├── Invalid ──► Self-Correction ──► Validation
+     ├──────── Invalid ────────► Self-Correction
+     │                                  │
+     │                                  └────► SQL Validator
      │
      ▼
 SQL Execution
@@ -159,408 +290,566 @@ SQL Execution
      ▼
 Result Analysis
      │
-     ├───────────────┐
-     ▼               ▼
-Visualization    Executive
-Recommendation    Summary
-     │               │
-     └───────┬───────┘
-             ▼
+     ├──────────────────┐
+     ▼                  ▼
+Visualization      Executive
+Recommendation     Summary
+     │                  │
+     └────────┬─────────┘
+              ▼
        React Dashboard
 ```
 
-## Technology Stack
+The self-correction path allows the graph to cycle back into validation rather than immediately failing the request.
 
-### Backend
+---
 
--   Python
--   FastAPI
--   LangGraph
--   LangChain
--   PostgreSQL
--   SQLGlot
--   Pydantic
--   Pytest
--   HTTPX / FastAPI TestClient
--   Structured LLM output
+# Technology Stack
 
-### Frontend
+## Backend
 
--   React
--   Vite
--   JavaScript
--   Recharts
--   ESLint
+* Python 3.12+
+* FastAPI
+* LangGraph
+* LangChain
+* Mistral AI
+* PostgreSQL
+* SQLAlchemy
+* SQLGlot
+* Pydantic
+* Pydantic Settings
+* Pandas
+* Pytest
+* HTTPX / FastAPI TestClient
 
-### Development
+## Frontend
 
--   Git / GitHub
--   VS Code
--   Docker --- next deployment milestone
+* React
+* Vite
+* JavaScript
+* Recharts
+* ESLint
+* CSS
 
-## Project Structure
+## Infrastructure
 
-A simplified structure is:
+* Docker
+* Docker Compose for local multi-container testing
+* Nginx for the containerized frontend
+* Render for deployment
+* Supabase PostgreSQL for the deployed database
 
-``` text
+## Development
+
+* Git
+* GitHub
+* VS Code
+* Docker Desktop
+
+---
+
+# Project Structure
+
+```text
 Self Correcting Natural Language SQL and Analyst Agent/
 │
 ├── app/
+│   ├── api/
+│   │   └── routes/
+│   │
 │   ├── config/
+│   │
+│   ├── database/
+│   │   ├── connection.py
+│   │   └── session.py
+│   │
 │   ├── graph/
+│   │   ├── graph.py
+│   │   └── nodes/
+│   │
 │   ├── models/
-│   ├── nodes/
+│   │
 │   ├── prompts/
+│   │
 │   ├── schemas/
-│   └── ...
-│
-├── tests/
+│   │
+│   ├── tools/
+│   │
+│   ├── utils/
+│   │
+│   ├── embeddings.py
+│   └── __init__.py
 │
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   ├── ...
+│   │   │   ├── AnalyticsChart.jsx
+│   │   │   ├── AnalyticsResult.jsx
+│   │   │   ├── ExecutiveSummary.jsx
+│   │   │   ├── QueryInput.jsx
+│   │   │   └── ResultTable.jsx
+│   │   │
+│   │   ├── utils/
 │   │   ├── App.jsx
+│   │   ├── App.css
+│   │   ├── index.css
 │   │   └── main.jsx
+│   │
+│   ├── Dockerfile
 │   ├── package.json
 │   └── ...
 │
-├── .env
+├── tests/
+│
+├── Dockerfile
+├── docker-compose.yml
+├── docker-compose.prod.yml
 ├── pyproject.toml
+├── main.py
+├── .env.example
+├── .gitignore
 └── README.md
 ```
 
-## Backend Setup
+---
 
-### Clone the repository
+# Local Backend Setup
 
-``` bash
-git clone <YOUR_REPOSITORY_URL>
+## 1. Clone the repository
+
+```bash
+git clone https://github.com/ahmad-186/self-correcting-sql-analytics-agent.git
 cd "Self Correcting Natural Language SQL and Analyst Agent"
 ```
 
-### Create a Python environment
+## 2. Create a virtual environment
 
-``` bash
+```bash
 python -m venv .venv
 ```
 
-Windows PowerShell:
+### Windows PowerShell
 
-``` powershell
+```powershell
 .venv\Scripts\Activate.ps1
 ```
 
-### Install dependencies
+## 3. Install dependencies
 
-``` bash
+```bash
 pip install -e .
 ```
 
-Use the dependency installation command defined by the current
-`pyproject.toml` if it differs.
+## 4. Configure environment variables
 
-### Configure environment variables
+Create a `.env` file based on `.env.example`.
 
-Create a `.env` file using the variables required by the current
-application configuration.
+Typical configuration:
 
-Typical configuration includes:
-
-``` env
+```env
 DATABASE_URL=<POSTGRESQL_CONNECTION_STRING>
-LLM_API_KEY=<YOUR_LLM_API_KEY>
+MISTRAL_API_KEY=<YOUR_MISTRAL_API_KEY>
 ```
 
-Use the exact variable names defined by the project's configuration.
+Use the exact variable names required by the application's settings configuration.
 
-**Never commit real credentials or API keys to GitHub.**
+**Never commit real credentials, API keys, or database passwords to GitHub.**
 
-### Start FastAPI
+## 5. Start the backend
 
-For a standard FastAPI entry point:
-
-``` bash
-uvicorn app.main:app --reload
+```bash
+uvicorn main:app --reload
 ```
 
-The backend should then be available at:
+The backend will be available at:
 
-``` text
+```text
 http://127.0.0.1:8000
 ```
 
-## API Documentation
+---
 
-When FastAPI is running, interactive API documentation is available at:
+# API Documentation
 
-``` text
+FastAPI provides interactive Swagger documentation at:
+
+```text
 http://127.0.0.1:8000/docs
 ```
 
-The OpenAPI schema is also available through FastAPI's standard OpenAPI
-endpoint.
+OpenAPI schema:
 
-## Frontend Setup
+```text
+http://127.0.0.1:8000/openapi.json
+```
 
-``` bash
+Health check:
+
+```text
+GET /health
+```
+
+Analytics endpoint:
+
+```text
+POST /analytics/query
+```
+
+Example request:
+
+```json
+{
+  "question": "Show total sales by product"
+}
+```
+
+---
+
+# Frontend Setup
+
+```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-The Vite development server runs at:
+Vite runs the frontend locally at:
 
-``` text
+```text
 http://localhost:5173
 ```
 
-The frontend communicates with the FastAPI backend through the
-configured API endpoint.
+The frontend communicates with the deployed or local FastAPI backend through the configured API endpoint.
 
-## Running Tests
+---
 
-Run the backend test suite with:
+# Running Tests
 
-``` bash
+Run the backend test suite:
+
+```bash
 pytest -q
 ```
 
-The current project has automated tests covering core backend
-functionality.
+The project includes automated tests covering core backend functionality.
 
-Example successful run:
+Example successful test run:
 
-``` text
+```text
 13 passed
 ```
 
-There may be dependency/deprecation warnings that do not currently cause
-test failures.
+---
 
-## Example
+# Docker
 
-A user can enter:
+The project is containerized to provide a reproducible runtime environment.
 
-``` text
+## Backend Docker Image
+
+The backend uses:
+
+```dockerfile
+FROM python:3.12-slim
+```
+
+The image installs the Python project dependencies and starts FastAPI through Uvicorn.
+
+Build the backend image:
+
+```bash
+docker build -t insightai-backend .
+```
+
+Run it:
+
+```bash
+docker run --rm -p 8000:8000 --env-file .env insightai-backend
+```
+
+---
+
+## Frontend Docker Image
+
+The frontend uses a multi-stage build:
+
+```text
+Node.js
+   ↓
+Vite production build
+   ↓
+Nginx
+   ↓
+Static frontend
+```
+
+This keeps the final runtime image lightweight and separates the build environment from the production serving environment.
+
+---
+
+# Docker Compose
+
+Docker Compose is used for local production-like testing of the application's services.
+
+Typical services include:
+
+```text
+Frontend
+Backend
+PostgreSQL
+```
+
+Start the local stack:
+
+```bash
+docker compose up --build
+```
+
+Stop the stack:
+
+```bash
+docker compose down
+```
+
+If PostgreSQL persistence is configured through a Docker volume, the database data can survive container recreation.
+
+For the deployed application, PostgreSQL is hosted externally rather than relying on an ephemeral application container database.
+
+---
+
+# Deployment
+
+The application has been deployed using **Render**.
+
+## Backend
+
+The FastAPI backend is deployed as a Docker-based web service.
+
+The backend receives production environment variables through Render's environment configuration rather than storing secrets in the repository.
+
+Important production variables include:
+
+```text
+DATABASE_URL
+MISTRAL_API_KEY
+```
+
+## Frontend
+
+The React/Vite frontend is deployed separately as a Render Static Site.
+
+The production frontend communicates with the deployed FastAPI backend through the configured production API URL.
+
+This separation allows:
+
+```text
+Frontend
+   │
+   │ HTTPS
+   ▼
+FastAPI Backend
+   │
+   ▼
+Supabase PostgreSQL
+```
+
+The frontend and backend remain independently deployable.
+
+---
+
+# Security Considerations
+
+LLM-generated SQL should never be treated as trusted input.
+
+InsightAI therefore introduces validation before execution.
+
+The current validation architecture includes:
+
+* SQL syntax validation
+* Read-operation restrictions
+* Schema-aware validation
+* Execution failure handling
+* Self-correction loop
+* Environment-based secret management
+
+For a larger production/SaaS deployment, additional controls should be added:
+
+* Dedicated read-only database users
+* Query timeouts
+* Query cost/resource limits
+* Rate limiting
+* Authentication and authorization
+* Tenant isolation
+* Audit logging
+* Database connection isolation
+* Stronger SQL allow/deny policies
+
+---
+
+# Example
+
+A user asks:
+
+```text
 Show total sales by product
 ```
 
-The request is processed through the analytics workflow and can produce:
+The system can transform the request into a complete analytics response containing:
 
-``` text
+```text
 Executive Summary
-
-The analysis shows total sales across four products.
 
 Key Insights
 
-- Office Chair had the highest sales.
-- Monitor 27" was another major contributor.
-- Gaming Mouse had the lowest sales.
+Interactive Visualization
 
-Total Sales by Product
-
-[Interactive Chart]
-
-Query Result
-
-Product                 Total Sales
------------------------------------
-Monitor 27"             $250.00
-Mechanical Keyboard      $90.00
-Office Chair            $360.00
-Gaming Mouse             $45.00
+Query Result Table
 ```
 
-The actual values are generated from the connected database rather than
-hardcoded into the analytics workflow.
+The underlying values are generated from the connected PostgreSQL database rather than being hardcoded into the workflow.
 
-## Safety and SQL Validation
+---
 
-Because SQL is generated with an LLM, validation is a critical part of
-the architecture.
+# What Makes This Project Different?
 
-The project includes validation logic designed to:
+The project is not designed as:
 
--   Validate SQL syntax.
--   Restrict execution to appropriate read operations.
--   Validate referenced database objects against schema information.
--   Prevent invalid generated SQL from reaching execution.
--   Feed validation/execution failures back into the self-correction
-    workflow.
+```text
+Prompt → LLM → SQL → Database
+```
 
-For production deployment, additional protections such as read-only
-database credentials, query timeouts, resource limits, and stronger
-tenant isolation should be considered.
+Instead, the system treats the LLM as one component inside a controlled analytics workflow:
 
-## Current Scope
-
-The current version focuses on the complete analytics pipeline:
-
-``` text
-Natural Language
-      ↓
-AI Analytics Agent
-      ↓
-SQL
-      ↓
+```text
+Question
+   ↓
+Schema Awareness
+   ↓
+SQL Generation
+   ↓
 Validation
-      ↓
+   ↓
+Self-Correction
+   ↓
 Execution
-      ↓
+   ↓
 Result Analysis
-      ↓
+   ↓
 Visualization
-      ↓
-Executive Insights
-      ↓
-Interactive Dashboard
+   ↓
+Business Insights
 ```
 
-The application currently operates against the configured database
-rather than allowing each end user to connect arbitrary databases.
+The main engineering goal is therefore **reliability around LLM-generated SQL**, rather than simply demonstrating natural-language SQL generation.
 
-## Roadmap
+---
 
-### Phase 1 --- Core Analytics Agent
+# Current Project Status
 
--   Natural-language analytics
--   Schema inspection
--   SQL generation
--   SQL validation
--   Self-correction
--   Query execution
--   Result analysis
--   Visualization recommendation
--   Executive summaries
+| Component                         | Status    |
+| --------------------------------- | --------- |
 
-**Status: Completed**
+| FastAPI Backend                   | Completed |
 
-### Phase 2 --- Analytics Dashboard
+| PostgreSQL Integration            | Completed |
 
--   React dashboard
--   Interactive query interface
--   KPI cards
--   Executive summaries
--   Key insights
--   Interactive visualizations
--   Result tables
--   Analysis history UI
+| LangGraph Workflow                | Completed |
 
-**Status: Core implementation completed**
+| Schema Inspection                 | Completed |
 
-### Phase 3 --- Containerization
+| SQL Generation                    | Completed |
 
-Planned:
+| SQL Validation                    | Completed |
 
--   Backend Dockerfile
--   Frontend Dockerfile
--   Docker Compose
--   Environment variable management
--   PostgreSQL container/deployment strategy
--   Local production-like testing
+| SQL Self-Correction               | Completed |
 
-**Status: Next**
+| Query Execution                   | Completed |
 
-### Phase 4 --- Deployment
+| Result Analysis                   | Completed |
 
-Planned:
+| Executive Summary                 | Completed |
 
--   Production deployment
--   HTTPS
--   Secrets management
--   Monitoring
--   Health checks
--   Production database configuration
+| Visualization Recommendation      | Completed |
 
-### Phase 5 --- Multi-Database / SaaS Architecture
+| Automated Backend Tests           | Completed |
 
-Potential future capabilities:
+| OpenAPI Documentation             | Completed |
 
--   User database connections
--   PostgreSQL/MySQL support
--   Secure credential storage
--   Connection management
--   Multi-tenant isolation
--   Per-user data-source management
--   Database-level read-only users
+| CORS Integration                  | Completed |
 
-This is intentionally outside the current deployment scope.
+| React Frontend                    | Completed |
 
-### Phase 6 --- Advanced Analytics
+| Interactive Dashboard             | Completed |
 
-Potential future improvements:
+| Backend Dockerization             | Completed |
 
--   Persistent query history
--   Persistent saved insights
--   Advanced KPI generation
--   Multi-agent architecture
--   Schema-aware semantic/hybrid retrieval
--   Additional visualization types
--   Scheduled reports
--   Exportable reports
--   Advanced business intelligence features
+| Frontend Dockerization            | Completed |
 
-## Development Principles
+| Local Docker Compose Testing      | Completed |
 
-The project is being developed incrementally, prioritizing a complete
-working system before adding unnecessary complexity.
+| Backend Deployment                | Completed |
 
-Key principles:
+| Frontend Deployment               | Completed |
 
-1.  Preserve separation between frontend and backend.
-2.  Keep the analytics graph modular.
-3.  Validate LLM-generated SQL before execution.
-4.  Avoid hardcoding business data.
-5.  Keep API contracts explicit.
-6.  Add tests when introducing backend behavior.
-7.  Keep secrets out of source control.
+| Multi-Database Support            | Future    |
 
-## Project Status
+| Persistent Query History          | Future    |
 
-  Component                           Status
-  ----------------------------------- -----------
-  FastAPI backend                     Completed
-  PostgreSQL integration              Completed
-  LangGraph analytics workflow        Completed
-  Schema inspection                   Completed
-  SQL generation                      Completed
-  SQL validation                      Completed
-  SQL self-correction                 Completed
-  Result analysis                     Completed
-  Executive summary                   Completed
-  Visualization recommendation        Completed
-  Automated backend tests             Completed
-  OpenAPI documentation               Completed
-  CORS integration                    Completed
-  React frontend                      Completed
-  Interactive analytics dashboard     Completed
-  Dockerization                       Next
-  Deployment                          Planned
-  Multi-database connections          Future
-  Persistent history/saved insights   Future
+| SaaS / Multi-Tenant Architecture  | Future    |
 
-## Contributing
+| Advanced Multi-Agent Architecture | Future    |
 
-This is primarily a personal engineering project.
+---
 
-When extending it:
+# Roadmap
 
-1.  Preserve frontend/backend separation.
-2.  Keep the LangGraph workflow modular.
-3.  Validate LLM-generated SQL before execution.
-4.  Avoid hardcoding business data.
-5.  Keep API contracts explicit.
-6.  Add tests for new backend behavior.
-7.  Keep secrets out of source control.
+## Future — Multi-Database / SaaS
 
-## License
+Potential improvements:
 
-Add the appropriate license before public distribution.
+* User-specific database connections
+* PostgreSQL/MySQL support
+* Secure credential storage
+* Connection management
+* Multi-tenant isolation
+* Database-level read-only users
+* Per-user data-source management
 
-## Author
+## Future — Advanced Analytics
+
+Potential improvements:
+
+* Persistent query history
+* Persistent saved insights
+* Advanced KPI generation
+* Multi-agent architecture
+* More advanced schema retrieval
+* Additional visualization types
+* Scheduled reports
+* Exportable reports
+* Advanced business intelligence capabilities
+
+---
+
+# Engineering Principles
+
+The project was developed around several principles:
+
+1. Keep frontend and backend responsibilities separated.
+2. Treat LLM-generated SQL as untrusted output.
+3. Validate SQL before execution.
+4. Make the LangGraph workflow modular.
+5. Keep API contracts explicit.
+6. Keep secrets outside source control.
+7. Prefer a complete working system before adding unnecessary architectural complexity.
+8. Design the workflow so failures can be detected and corrected instead of silently propagated.
+
+---
+
+# Author
 
 **Ahmad Shahzad**
 
 AI Engineering • Full-Stack AI • Agentic Systems • Automation
+
+Built as a practical exploration of reliable LLM-powered analytics systems.
