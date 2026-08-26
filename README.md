@@ -748,57 +748,31 @@ The main engineering goal is therefore **reliability around LLM-generated SQL**,
 
 | Component                         | Status    |
 | --------------------------------- | --------- |
-
 | FastAPI Backend                   | Completed |
-
 | PostgreSQL Integration            | Completed |
-
 | LangGraph Workflow                | Completed |
-
 | Schema Inspection                 | Completed |
-
 | SQL Generation                    | Completed |
-
 | SQL Validation                    | Completed |
-
 | SQL Self-Correction               | Completed |
-
 | Query Execution                   | Completed |
-
 | Result Analysis                   | Completed |
-
 | Executive Summary                 | Completed |
-
 | Visualization Recommendation      | Completed |
-
 | Automated Backend Tests           | Completed |
-
 | OpenAPI Documentation             | Completed |
-
 | CORS Integration                  | Completed |
-
 | React Frontend                    | Completed |
-
 | Interactive Dashboard             | Completed |
-
 | Backend Dockerization             | Completed |
-
 | Frontend Dockerization            | Completed |
-
 | Local Docker Compose Testing      | Completed |
-
 | Backend Deployment                | Completed |
-
 | Frontend Deployment               | Completed |
-
 | Multi-Database Support            | Future    |
-
 | Persistent Query History          | Future    |
-
 | SaaS / Multi-Tenant Architecture  | Future    |
-
 | Advanced Multi-Agent Architecture | Future    |
-
 ---
 
 # Roadmap
